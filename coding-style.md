@@ -35,7 +35,7 @@ Thus, to summarize:
  - Testbench - SystemVerilog (.sv)
 
 ### 2. Indentation -
-By default, the __tab size__ in most editors and projects is set to __4__. While this seems reasonable in most cases, the tab size for all RTL files must be __8__.
+By default, the __tab size__ in most editors and projects is set to __4__. While this seems reasonable in most cases, the tab size should be __spaces__ for all RTL files must be __8__.
 
 __Rationale:__ The whole idea behind indentation is to clearly define where a block of control starts and ends. Especially when you've been looking at your screen for 20 straight hours, you'll find it a lot easier to see how the indentation works if you have large indentations.
 
@@ -43,11 +43,12 @@ Now, some people will claim that having 8-character indentations makes the code 
 
 In short, 8-character indents make things easier to read and have the added benefit of warning you when you are nesting your functions too deeply.
 
-### *Steps to Change Tab Size*
+### *Steps to Change Tab Size to 8 Spaces*
 #### 1) Vivado:
 
 - Go to __Tools__ > __Settings__ > __Text Editor__ > __Tab and Indents__
 - Set __Tab Size__ to __8__
+- Do NOT check the box __Use tab character__.
 - Click __Apply__ and __OK__.
 
 ![alt text](images/image-1.png)
@@ -59,6 +60,10 @@ In short, 8-character indents make things easier to read and have the added bene
 - Set __Tab Size__ to __8__.
 
 ![alt text](images/image-3.png)
+
+- Then search for __Insert Spaces__ in the search bar.
+- Check the box __Insert Spaces__.
+
 ![alt text](images/image-4.png)
 
 ---
