@@ -11,7 +11,9 @@ This document is partly inspired by the rules followed in the biggest and most i
 - Directory Structure
 - File Naming Conventions
 - File Structure and Formatting
+- Comments
 - Writing Readable Code
+- FSM Coding
 - Testbenches
 - Dealing with Open Source IPs
 - Conclusion
@@ -60,105 +62,6 @@ In short, 8-character indents make things easier to read and have the added bene
 ![alt text](images/image-3.png)
 ![alt text](images/image-4.png)
 
-### 3. Trimming Whitespaces -
-
-Trailing whitespace is a common source of linting warnings and can make code look untidy. It is recommended to trim trailing whitespace in all RTL files before committing to the repository. Most modern code editors provide an option to automatically trim trailing whitespace on save, which can be enabled to maintain clean code.
-
-### *Steps to Enable Auto Trim Trailing Whitespaces*
-#### 1) Vivado:
-
-Vivado does not have a built-in feature to automatically trim trailing whitespaces.
-
-#### 2) Visual Studio Code:
-- Open __Settings__ (File > Preferences > Settings)
-- Search for __Trim Trailing Whitespace__ in the search bar.
-- Check the box for __Trim Trailing Whitespace__ to enable it.
-
-![alt text](images/image-5.png)
-
-#### 3) Git Hook:
-You can set up a Git pre-commit hook to automatically trim trailing whitespace before committing. Use one of the following based on your OS.
-
-File type of `pre-commit`: Plain text shell script file with no extension (name must be exactly `pre-commit`).
-
-Note: After `git init`, Git usually creates `.git/hooks/pre-commit.sample` with example checks. To enable your custom hook, use that sample file as a starting point and create `.git/hooks/pre-commit`.
-
-##### *Windows (Git for Windows + Git Bash)*
-Create `.git/hooks/pre-commit` (from `.git/hooks/pre-commit.sample`) and paste:
-
-```bash
-#!/bin/sh
-
-# Trim trailing whitespace only in staged files, then re-stage them.
-git diff --cached --check \
-| sed -E 's/:[0-9]+:.*//' \
-| sort -u \
-| while IFS= read -r file; do
-    [ -f "$file" ] || continue
-    sed -i 's/[[:space:]]\+$//' "$file"
-    git add -- "$file"
-done
-
-exit 0
-```
-
-Steps:
-1) Open Git Bash in the repository root.
-2) Run `mkdir -p .git/hooks`.
-3) If `.git/hooks/pre-commit.sample` exists, run `cp .git/hooks/pre-commit.sample .git/hooks/pre-commit`; otherwise run `touch .git/hooks/pre-commit`.
-4) Run `notepad .git/hooks/pre-commit`, remove all existing content, paste the script shown above, and save.
-5) Run `chmod +x .git/hooks/pre-commit`.
-6) In VS Code, set line endings to LF for `.git/hooks/pre-commit` and save.
-    - LF means __Line Feed__ (`\n`), the Unix/Linux newline format used by shell scripts.
-    - Do not use CRLF (`\r\n`) for Git hooks, or the script may fail with `/bin/sh^M` style errors.
-    - In VS Code: open `.git/hooks/pre-commit` -> click `CRLF` or `LF` in the bottom-right status bar -> select `LF` -> save.
-7) Optional checks in Git Bash:
-    - Run `file .git/hooks/pre-commit` (should not show CRLF line terminators).
-    - Run `ls -l .git/hooks/pre-commit` (should show executable permission bits, for example `-rwxr-xr-x`).
-8) Test the hook:
-    - Add trailing spaces in a tracked file.
-    - Run `git add <file>`.
-    - Run `git commit -m "test pre-commit hook"`.
-    - Confirm trailing spaces were removed automatically.
-
-##### *Linux*
-Create `.git/hooks/pre-commit` and paste:
-
-```bash
-#!/bin/sh
-
-# Trim trailing whitespace only in staged files, then re-stage them.
-git diff --cached --check \
-| sed -E 's/:[0-9]+:.*//' \
-| sort -u \
-| while IFS= read -r file; do
-    [ -f "$file" ] || continue
-    tmp="$(mktemp)"
-    awk '{ sub(/[[:space:]]+$/, ""); print }' "$file" > "$tmp" &&
-    mv "$tmp" "$file"
-    git add -- "$file"
-done
-
-exit 0
-```
-
-Steps:
-1) Open terminal in the repository root.
-2) Run `mkdir -p .git/hooks`.
-3) If `.git/hooks/pre-commit.sample` exists, run `cp .git/hooks/pre-commit.sample .git/hooks/pre-commit`; otherwise run `touch .git/hooks/pre-commit`.
-4) Run `nano .git/hooks/pre-commit`, remove all existing content, paste the script shown above, and save.
-5) Run `chmod +x .git/hooks/pre-commit`.
-6) Optional check: run `ls -l .git/hooks/pre-commit` (should show executable permission bits).
-7) Test the hook:
-    - Add trailing spaces in a tracked file.
-    - Run `git add <file>`.
-    - Run `git commit -m "test pre-commit hook"`.
-    - Confirm trailing spaces were removed automatically.
-
-Every time you commit, the pre-commit hook will automatically trim trailing whitespace from all staged files, ensuring that your commits are clean and free of unnecessary whitespace.
-
-Now that we have covered the ground rules, we will move on to the next section of this document - __Directory Structure__.
-
 ---
 
 ## Directory Structure
@@ -166,7 +69,7 @@ A well-organized directory structure is crucial for maintaining a clean and effi
 
 You shouldn't have too many files in a single directory, as it can become overwhelming and difficult to navigate. Conversely, having too many nested directories can also make it hard to find files. A good rule of thumb is to aim for a balance, keeping related files together while avoiding excessive nesting.
 
-For this project, we first separate the design files and testbench files into two main directories: `RTL/` and `tb/`.
+For this project, we first separate the design files and testbench files into two main directories: `RTL/` and `TB/`.
 
 To keep subfolders within `RTL/` simple, all files which are called by a wrapper module should be placed in the same folder as the wrapper module.
 
@@ -195,7 +98,7 @@ project_root/
 │           └── file_f.v
 ```
 
-For the testbench, all files are kept in a single folder `tb/` as testbench files are not called by any wrapper module and are only used for testing purposes. This keeps the testbench directory simple and easy to navigate.
+For the testbench, all files are kept in a single folder `TB/` as testbench files are not called by any wrapper module and are only used for testing purposes. This keeps the testbench directory simple and easy to navigate.
 
 ---
 
@@ -219,17 +122,17 @@ The module name inside the file should match the file name to maintain consisten
 Uniformity in file structure helps maintain readability and makes it easier to debug and maintain the code.
 
 Any (.v) design file should follow the following structure in this order:
-- `timescale 1ns / 1ps`
-- Comment Header
-- `define` statements (if any)
-- module declaration and I/O port list
-- Parameter declarations (if any)
-- `wire` and `reg` declarations
-- Instantiations of submodules (if any)
-- Sequential logic (always blocks)
-- Combinational logic (always blocks)
-- Continuous assignments (assign statements)
-- endmodule
+1. `timescale 1ns / 1ps`
+2. Comment Header
+3. `define` statements (if any)
+4. module declaration and I/O port list
+5. Parameter declarations (if any)
+6. `wire` and `reg` declarations
+7. Instantiations of submodules (if any)
+8. Sequential logic (always blocks)
+9. Combinational logic (always blocks)
+10. Continuous assignments (assign statements)
+11. endmodule
 
 ### *Comment Header*
 Every file should start with a comment header that provides essential information about the file.
@@ -277,32 +180,7 @@ Now right now this may not seem like a big deal, but as the design grows in comp
 
 ---
 
-## Writing Readable Code
-Now, with the ground rules, directory structure, file naming conventions, and file structure mentioned above very minimal changes are needed to be made to write readable code. However, here are some additional tips for writing readable code:
-
-### 1. __Variable and signal names__:
-
-Variable and signal names should be chosen so that the name itself gives an idea of what the variable/signal represents. For example, `counter` is a better name than `cnt` for a signal that counts something.
-
-In the case of `for` loops, use standard variable names like `i`, `j`, and `k` for loop indices rather than `loop_counter`, but ensure that the loop's purpose is clear from the context.
-
-#### NOTE:
-
-If a signal is pulled from a lower-level module to a higher-level wrapper, it is recommended to keep the EXACT SAME name for the signal in the wrapper module as well. This helps maintain consistency and makes it easier to trace signals through the design when viewing the schematic.
-
-An example of this is shown below for the signal `o_rx_error`:
-
-![alt text](images/image-9.png)
-
-![alt text](images/image-10.png)
-
-![alt text](images/image-11.png)
-
-![alt text](images/image-12.png)
-
-We see that only in the last image the signal name is changed from `o_rx_error` to `UART_rx_error`, as the final top module may also have a signal called `FIFO_rx_error` and changing the name to `UART_rx_error` helps us easily identify which signal comes from which module when viewing the schematic.
-
-### 2. __Comments__:
+## __Comments__:
 
 Comments are good, but there is also a danger of over-commenting. NEVER try to explain HOW your code works in a comment: it's much better to write the code so that the working is obvious, and it's a waste of time to explain badly written code.
 
@@ -345,15 +223,38 @@ Here is an example of all the above tips put together in a single code snippet:
 ```verilog
 module boot_controller
 (
-	input		clk,
-	input		load_en, resetn_in, //mapped to external switch
-	input 		UART_load_done, FIFO_load_done, boot_load_done,
-   	input [1:0] mode_sel, //mapped to external switch
-   	input 		UART_load_busy,
-   	input 		FIFO_load_busy,
-   	input 		boot_load_busy,
-   	output reg 	resetn_core_req, //Active low reset signal to release core
-   	output reg 	boot_en, fw_load_en, UART_rx_en,FIFO_rx_en,
+	//from external
+	input wire clk,
+	input wire load_en,
+	input wire resetn_in,
+	input wire [1:0] mode_sel,
+
+	//from UART
+	input wire UART_load_done,
+	input wire UART_load_busy,
+
+	//from FIFO
+	input wire FIFO_load_done,
+   	input wire FIFO_load_busy,
+
+	//from core
+	input wire boot_load_done,
+	input wire boot_load_busy,
+
+	//to core
+   	output reg resetn_core_req,
+   	output reg boot_en,
+
+	//to SRAM Controller
+	output reg fw_load_en,
+
+	// to UART
+	output reg UART_rx_en,
+
+	// to FIFO
+	output reg FIFO_rx_en,
+
+	// to external
    	output reg 	load_busy,
    	output reg 	load_done
 );
@@ -369,18 +270,19 @@ module boot_controller
 always @ (posedge clk)
 begin
 	if(!resetn_in)
-    begin
-	    state <= IDLE;
+	begin
+		state <= IDLE;
 		fw_load_done <=0;
-    end
-    else
-    begin
-        if (state == IDLE && load_en)
-	        fw_load_done <= 1'b0;
+	end
+	else
+	begin
+		if (state == IDLE && load_en)
+			fw_load_done <= 1'b0;
 		else
-	        fw_load_done <= fw_load_done_next;
-		state <= next_state;
-    end
+			fw_load_done <= fw_load_done_next;
+
+	state <= next_state;
+	end
 end
 ```
 
@@ -402,9 +304,9 @@ parameter [2:0] IDLE = 3'b000,
 		UART_LOAD = 3'b011,
 		RST_RELEASE = 3'b100;
 
-//-------------------------------//
-// Intermediate internal signals //
-//-------------------------------//
+//-----------------------//
+// internal done signals //
+//-----------------------//
 reg fw_load_done;
 wire fw_load_done_next;
 reg load_done_latch;
@@ -414,9 +316,9 @@ reg load_done_latch;
 //-----------------//
 reg [2:0] state, next_state;
 
-//------------------------------------------------//
-// Intermediate Signals for load busy/done status //
-//------------------------------------------------//
+//----------------//
+// Status Signals //
+//----------------//
 wire busy_any;
 wire done_any;
 
@@ -424,26 +326,26 @@ wire done_any;
 ...
 
 
-//----------------------------//
+//--------------------------//
 // boot_controller instance //
-//----------------------------//
+//--------------------------//
 boot_controller u_boot_ctrl (
 	.clk			(clk),
    	.resetn_in		(resetn_in),
    	.load_en		(load_en),
    	.mode_sel		(mode_sel),
 
-   	// UART signals (stub when disabled)
+   	// UART signals
    	.UART_load_done	(UART_ld_done),
    	.UART_load_busy	(UART_load_busy),
    	.UART_rx_en		(UART_rx_enable),
 
-   	// FIFO signals (stub when disabled)
+   	// FIFO signals
    	.FIFO_load_done (FIFO_ld_done),
    	.FIFO_load_busy (FIFO_load_busy),
    	.FIFO_rx_en		(FIFO_rx_en),
 
-   	// Boot signals (stub when disabled)
+   	// Boot signals
    	.boot_load_done (load_done_core),
    	.boot_load_busy (load_busy_core),
    	.boot_en		(boot_en),
@@ -466,7 +368,227 @@ Here is a template for the comment titles:
 //----------------------------------//
 ```
 
-### 3. __Dealing with long lines__:
+## Writing Readable and Predictable Code
+Now, with the ground rules, directory structure, file naming conventions, and file structure mentioned above, we can now focus on writing readable and predictable code.
+
+> ### NOTE: __This section is of utmost importance as it directly affects the quality of the generated netlist during synthesis and physical design.__
+
+### 1. __Variable and signal names__:
+
+Variable and signal names should be chosen so that the name itself gives an idea of what the variable/signal represents. For example, `counter` is a better name than `cnt` for a signal that counts something.
+
+In the case of `for` loops, use standard variable names like `i`, `j`, and `k` for loop indices rather than `loop_counter`, but ensure that the loop's purpose is clear from the context.
+
+A signal name should be descriptive enough to explain the purpose of the signal. For example, `resetn_core_req` is a better name than `resetn` for a signal that represents an active low reset signal to release the core.
+
+#### NOTE:
+
+If a signal is pulled from a lower-level module to a higher-level wrapper, it is recommended to keep the EXACT SAME name for the signal in the wrapper module as well. This helps maintain consistency and makes it easier to trace signals through the design when viewing the schematic.
+
+An example of this is shown below for the signal `o_rx_error`:
+
+![alt text](images/image-9.png)
+
+![alt text](images/image-10.png)
+
+![alt text](images/image-11.png)
+
+![alt text](images/image-12.png)
+
+We see that only in the last image the signal name is changed from `o_rx_error` to `UART_rx_error`, as the final top module may also have a signal called `FIFO_rx_error` and changing the name to `UART_rx_error` helps us easily identify which signal comes from which module when viewing the schematic.
+
+### 2. __Maximum Level of Nesting__:
+
+At most, __3 levels__ of nesting is preferred. If you find yourself nesting more than 3 levels and are using Tab size of 8, you will find yourself scrolling to the right to read the code, which is a clear indication that the code is too convoluted and needs to be refactored.
+
+Here is an exmple of a block of code with more than 3 levels of nesting:
+
+```verilog
+module packet_router (
+	input wire clk,
+	input wire rst_n,
+	input wire pkt_valid,
+	input wire ready,
+	input wire secure_mode,
+	input wire [1:0] dest_port,
+	output reg [2:0] route_status
+);
+
+always @(posedge clk or negedge rst_n)
+begin
+	if (!rst_n)
+		route_status <= 3'b000;
+	else
+	begin
+		// Check if packet is valid
+		if (pkt_valid)
+		begin
+		// Check if downstream channel is ready
+			if (ready)
+			begin
+				// Check if security check passes
+				if (!secure_mode)
+				begin
+					// Check target destination port
+					if (dest_port == 2'b01)
+						// Final leaf assignment
+						route_status <= 3'b101;
+					else
+						route_status <= 3'b100;
+				end
+				else
+					route_status <= 3'b011;
+			end
+			else
+				route_status <= 3'b010;
+		end
+		else
+			route_status <= 3'b001;
+	end
+end
+
+endmodule
+```
+
+Notice Something, if these were to be synthesized it generate a series of muxes whose select lines feed into next mux forming a long chain of combinational logic.
+
+This has 3 issues:
+1) Any change required to the logic will require refactoring the entire block of code.
+2) Missing even a single `begin` `end` clause or `else` statement will synthesize to __X__ logic in edge cases.
+3) Due to the long chain formed by muxes, chances of setup and hold violations are very high, which can lead to timing failures in the design.
+
+In the above code I have also put alot of unnecessary comments to explain the logic, which is not needed if the code is written in a more readable way.
+
+Here is a better way to write the same logic with 3 or less levels of nesting:
+
+```verilog
+module packet_router (
+	input wire clk,
+	input wire rst_n,
+	input wire pkt_valid,
+	input wire ready,
+	input wire secure_mode,
+	input wire [1:0] dest_port,
+	output reg [2:0] route_status
+);
+
+always @(posedge clk or negedge rst_n)
+begin
+        if (!rst_n)
+        	route_status <= 3'b000;
+	else
+	begin
+        	if (!pkt_valid)
+                	route_status <= 3'b001;
+		else if (!ready)
+                	route_status <= 3'b010;
+            	else if (secure_mode)
+                	route_status <= 3'b011;
+            	else
+		begin
+                	case (dest_port)
+                    		2'b01:
+					route_status <= 3'b101;
+                    		default:
+					route_status <= 3'b100;
+			endcase
+            	end
+        end
+end
+
+endmodule
+```
+
+We can completely flatten this logic by using logical operators (&&) to combine early-exit conditions and utilizing a clean case structure for the destination checking.
+
+Some of the key benefits of this approach are:
+1) __Early Exits:__ Handling error/idle states (!pkt_valid, !ready) immediately eliminates the need to nest subsequent operations inside them.
+2) __Case Statement Transformation:__ Replacing the lowest level of nested if-else blocks with a case statement removes indentation levels and guides the synthesis tool to create cleaner parallel logic instead of chain of muxes.
+3) __Readability:__ A developer can scan down the else if conditions linearly rather than tracking matching pairs across multiple indentation depths.
+
+### 3. Latch Avoidance in Combinational Logic:
+Latches are the absolute enemy of standard ASIC synthesis. They create timing loops, complicate Static Timing Analysis (STA), and waste physical area.
+
+Latches occur when an `if/elseif` tree is not closed by a final `else` statement, or when a `case` statement does not cover all cases (full case) or does not have a `default` case.
+
+Latches should ALMOST always be avoided unless absolutely necessary (in which case they should be __clearly documented__).
+
+__Best Practice:__ Assign a default value to all outputs at the very top of your combinational block. This guarantees Genus will synthesize pure combinational logic (AND/OR/XOR gates) rather than sequential D-Latches.
+
+Bad Code:
+```verilog
+always @(*)
+begin
+    if (enable)
+        data_out = data_in;
+end
+```
+Here, if `enable` is low, `data_out` retains its previous value, which infers a latch.
+
+```verilog
+always @(*)
+begin
+    data_out = 1'b0;
+    if (enable)
+        data_out = data_in;
+end
+```
+This logic synthesies into an *AND gate* with `enable` as one input and `data_in` as the other.
+
+### 4. Mux Inference vs. Priority Encoders (if-else vs case)
+The way you structure conditional logic dictates whether Genus builds a deep logic chain or a fast, flat multiplexer.
+
+- Use case statements instead of long if-else chains where appropriate.
+
+- Multiple if statements with multiple branches result in the creation of priority encoder structure. (Chain of muxes where the first true condition takes precedence over the others.)
+
+- An "if else if" infers priority encoder.
+
+- A general case statement infers a n-way multiplexer. which is a faster circuit with less logic depth.
+
+- Use late arriving signal early in an 'if-else' loop to keep these late arriving signals with critical timing closest to the output of a logic block.
+
+### 5. __Clock and Reset__:
+Clocks and resets are treated as specialised signals when considering ASIC Synthesis as almost every module unanimously uses it to synchronise the logic to a known state. Thus, it is important to follow a few rules when dealing with clock and reset signals.
+
+#### Sensitivity List:
+- Sensitivity list sets the stage of how you treat these signals in your design.
+- Whenever there is a `posedge` or `negedge` construct synthesis tool infers a flip flop.
+
+#### General Rule of Thumb:
+1) Clock signals are __Active High__ and are always used in `posedge` constructs.
+
+```verilog
+always @(posedge clk)
+begin
+
+---
+
+end
+```
+
+2) Prefer __Active Low__ Synchronous Reset signals in design.
+
+```verilog
+always @(posedge clk)
+begin
+	if (!resetn)
+
+		---
+
+	else
+
+		---
+
+end
+```
+
+> Reset Signals in almost ALL ASIC designs are taken as __Active Low__ signals. The specific reason comes down to the physics behind __NAND__ and __NOR__ gates.
+> - __NAND__ gates, by design are smaller and faster than __NOR__ gates.
+> - They use __N-channel transistors__ in series to pull the output to ground. Because *electrons* move faster than *holes* (used in __PMOS__), __NMOS__ transistors are highly efficient.
+> - With being smaller and faster the overall area and clock to Q delay is reduced in the design, leading to smaller propagation delays and better timing closure (especially in high frequency designs where reset is crucial to set the design in a known state).
+
+### 6. __Dealing with long lines__:
 
 Coding style is all about readability and maintainability using commonly available tools.
 
@@ -484,11 +606,9 @@ assign long_signal_name = signal_a & signal_b &
 
 This style allows for clear separation of the different signals being ANDed together, making it easier to read and understand the logic.
 
-### 4. __Brackets and Spaces__:
+### 7. __Brackets__:
 
 Brackets `()` are mainly encountered in module definitions and submodule instantiations in Verilog code.
-
-For __Spaces__, in module keep all the signal names in the same indentation level and use spaces to align the port names and parameter names vertically for better readability.
 
 In general, for module definitions, keep the braces on separate lines for both parameter list and port list, and align the port names and parameter names vertically for better readability. For example:
 
@@ -498,40 +618,41 @@ module SRAM_controller
 	parameter 			N = 12,
 	parameter 			W = 32
 )(
-	input 				clk,
-	input 				resetn_in,
-	input 				load_en,
-	input 				i_rx,
-	input [1:0] 		mode_sel,
+	//from external
+	input clk,
+	input resetn_in,
+	input load_en,
+	input i_rx,
+	input [1:0] mode_sel,
 
-   	//Signals from Core
-   	input wire 			load_busy_core, // Active when flash -> core -> SRAM load is in progress
-   	input wire 			load_done_core, // Active when flash -> core -> SRAM load is done
-   	input wire [W-1:0] 	CORE_WDATA,
-   	input wire [31:0] 	CORE_ADDR,
+   	//from Core
+   	input wire load_busy_core,
+   	input wire load_done_core,
+   	input wire [W-1:0] CORE_WDATA,
+   	input wire [31:0] CORE_ADDR,
 
-   	//Signals to Core
-   	output wire 		sync_core_resetn, // Synchronous reset to core (active low)
-   	output wire 		boot_en, // Active during firmware loading (flash -> core -> SRAM)
+   	//to Core
+   	output wire sync_core_resetn,
+   	output wire boot_en,
 
-   	//Signals to address decoder
-   	output wire [31:0] 	SRAM_ADDR_RAW, // Raw address to SRAM (before any address translation)
-   	output wire 		fw_load_en,
+   	//to address decoder
+   	output wire [31:0] SRAM_ADDR_RAW,
+   	output wire fw_load_en,
 
-   	//Signals to SRAM (after MUX selection)
-   	output wire [31:0] 	SRAM_WDATA, // Final write data to SRAM
+   	//to SRAM
+   	output wire [31:0] SRAM_WDATA,
 
-   	// Flags and status outputs
-   	output 				load_busy,
-   	output 				load_done,
-   	output 				o_rts,
-   	output 				UART_check_start,
-   	output 				UART_rx_error,
-   	output 				header_fail,
+   	//to external
+   	output load_busy,
+   	output load_done,
+   	output o_rts,
+   	output UART_check_start,
+   	output UART_rx_error,
+   	output header_fail,
 
-   	// BRAM IP Specific Interfacing Signals
-   	output 				sram_valid_uart,
-   	output 				sram_wea_uart
+   	// to BRAM IP
+   	output sram_valid_uart,
+   	output sram_wea_uart
 );
 ```
 
@@ -542,28 +663,28 @@ For submodule instantiations, however, the preferred style is to keep the openin
 // controller_path_mux instance  //
 //-------------------------------//
 controller_path_mux #(
-	.N				(N),
-	.W				(W)
+	.N (N),
+	.W (W)
 ) u_controller_path_mux (
-	.mode_sel		(mode_sel),
-	.fw_load_en		(fw_load_en),
-	.CORE_WDATA		(CORE_WDATA),
-	.CORE_ADDR		(CORE_ADDR),
+	.mode_sel (mode_sel),
+	.fw_load_en (fw_load_en),
+	.CORE_WDATA (CORE_WDATA),
+	.CORE_ADDR (CORE_ADDR),
 	.UART_SRAM_WDATA(UART_SRAM_WDATA),
 	.UART_SRAM_ADDR	(UART_SRAM_ADDR),
 	.FIFO_SRAM_WDATA(FIFO_SRAM_WDATA),
 	.FIFO_SRAM_ADDR	(FIFO_SRAM_ADDR),
-	.FW_ADDR		(FW_ADDR),
-	.FW_WDATA		(FW_WDATA),
+	.FW_ADDR (FW_ADDR),
+	.FW_WDATA (FW_WDATA),
 	.SRAM_ADDR_RAW	(SRAM_ADDR_RAW),
-	.SRAM_WDATA		(SRAM_WDATA)
+	.SRAM_WDATA (SRAM_WDATA)
 );
 ```
 
 #### NOTE:
 > When calling the submodule use `u_` as prefix for the instance name to clearly indicate that it is a module instance. For example, `u_controller_path_mux` for an instance of the `controller_path_mux` module. This is a common convention in Verilog coding style and helps to easily identify module instances in the code.
 
-### 5. __`begin` and `end` placement for `if-else` and `case` statements__:
+### 8. __`begin` and `end` placement for `if-else` and `case` statements__:
 
 There are different ways people prefer to place `begin` and `end` statements for `if-else` and `case` statements.
 
@@ -589,18 +710,19 @@ This easily helps to visually separate the different blocks of code and makes it
 always @ (posedge clk)
 begin
 	if(!resetn_in)
-    begin
-	    state <= IDLE;
+	begin
+		state <= IDLE;
 		fw_load_done <=0;
-    end
-    else
-    begin
-        if (state == IDLE && load_en)
-	        fw_load_done <= 1'b0;
+    	end
+    	else
+    	begin
+        	if (state == IDLE && load_en)
+			fw_load_done <= 1'b0;
 		else
-	        fw_load_done <= fw_load_done_next;
+			fw_load_done <= fw_load_done_next;
+
 		state <= next_state;
-    end
+    	end
 end
 ```
 
@@ -610,65 +732,70 @@ Here is an example with case statement:
 always @ (posedge clk)
 begin
 	if(!resetn_in)
-    begin
+	begin
 		resetn_core_req <= 0;
 		fw_load_en <= 0;
 		boot_en <= 0;
 		UART_rx_en <= 0;
 		FIFO_rx_en <= 0;
-    end
-    else
-    begin
+	end
+	else
+	begin
 		case(state)
 	    		IDLE:
-                begin
-				    resetn_core_req <= 0;
-				    if(load_en & !fw_load_done)
-		    			fw_load_en <= 1;
+			begin
+				resetn_core_req <= 0;
+				if(load_en & !fw_load_done)
+					fw_load_en <= 1;
 	    		end
+
 	    		SAMPLE:
-                begin
-				    if(mode_sel == 2'b00)
-		    		    boot_en <= 1;
-				    else
-		    			boot_en <=0;
+			begin
+				if(mode_sel == 2'b00)
+					boot_en <= 1;
+				else
+					boot_en <=0;
 	    		end
+
 	    		FIFO_LOAD:
-                begin
-				    FIFO_rx_en <= 1;
-				    if(fw_load_done_next)
-		    			fw_load_en <= 0;
-	    		end
+			begin
+				FIFO_rx_en <= 1;
+
+				if(fw_load_done_next)
+					fw_load_en <= 0;
+			end
+
 	    		UART_LOAD:
-                begin
-				    UART_rx_en <= 1;
-				    if(fw_load_done_next)
-		    			fw_load_en <= 0;
-	    		end
+			begin
+				UART_rx_en <= 1;
+				if(fw_load_done_next)
+					fw_load_en <= 0;
+			end
+
 	    		RST_RELEASE:
-                begin
-				    resetn_core_req <= 1;
-				    if (fw_load_done)
-                    begin
-		    			boot_en <= 0;
+			begin
+				resetn_core_req <= 1;
+				if (fw_load_done)
+				begin
+					boot_en <= 0;
 		    			FIFO_rx_en <= 0;
 		    			UART_rx_en <= 0;
-				    end
-	    		end
-	    		default:
-                begin
-				    resetn_core_req <= 0;
-				    fw_load_en <= 0;
-				    boot_en <= 0;
-				    UART_rx_en <= 0;
-				    FIFO_rx_en <= 0;
-			    end
+				end
+			end
+			default:
+			begin
+				resetn_core_req <= 0;
+				fw_load_en <= 0;
+				boot_en <= 0;
+				UART_rx_en <= 0;
+				FIFO_rx_en <= 0;
+			end
 		endcase
-    end
+	end
 end
 ```
 
-### 6. __Avoid assigning logic directly to wire when defining them__:
+### 9. __Avoid assigning logic directly to wire when defining them__:
 
 It is preferred to avoid assigning logic directly to `wire` when defining them.
 
@@ -689,9 +816,661 @@ wire signal_a;
 assign signal_a = signal_b & signal_c;
 ```
 
-This concludes the Writing Readable Code section.
+### 10. __Prefer Reusable Logic (`define and parameters)__:
+In a large design with multiple modules, signals will often communicate between modules.
+
+Any change required to such signals will require manually keeping track of all the modules where the signal is used and changing it in all those modules.
+
+#### Parameters:
+Parameters are a great way to define bus widths, state values, and other constants that may need to be changed in the future.
+
+1) __Child Modules__ define default local parameters for their I/O port widths and internal signals.
+
+2) The __Parent/Wrapper Module__ defines its own parameter list.
+
+3) __Submodule Instantiations__ explicitly override the child parameters by passing the wrapper's parameter down using the __#(.PARAM_NAME(WRAPPER_PARAM))__ syntax.
+
+Consider this example below of 2 different child modules with different default parameters for their I/O port widths and internal signals:
+
+```verilog
+`timescale 1ns / 1ps
+
+module bus_adder
+#(
+	parameter DATA_WIDTH = 16
+)(
+	input  [DATA_WIDTH-1:0] a,
+	input  [DATA_WIDTH-1:0] b,
+	output [DATA_WIDTH-1:0] sum
+);
+
+	assign sum = a + b;
+
+endmodule
+```
+
+
+```verilog
+`timescale 1ns / 1ps
+
+module bus_register
+#(
+	parameter DATA_WIDTH = 16
+)(
+	input                         clk,
+	input                         resetn,
+	input                         load_en,
+	input      [DATA_WIDTH-1:0]   d_in,
+	output reg [DATA_WIDTH-1:0]   d_out
+);
+
+	always @(posedge clk)
+	begin
+		if (!resetn)
+			d_out <= {DATA_WIDTH{1'b0}};
+		else
+		begin
+			if (load_en)
+				d_out <= d_in;
+		end
+	end
+
+endmodule
+```
+
+The parent/wrapper module can then define its own parameter list and override the child parameters as needed:
+
+```verilog
+`timescale 1ns / 1ps
+
+module data_path_wrapper
+#(
+	parameter DATA_WIDTH = 32
+)(
+	input                         clk,
+	input                         resetn,
+	input                         load_en,
+	input      [DATA_WIDTH-1:0]   operand_a,
+	input      [DATA_WIDTH-1:0]   operand_b,
+	output     [DATA_WIDTH-1:0]   result_out
+);
+
+wire [DATA_WIDTH-1:0] sum_internal;
+
+bus_adder #(
+	.DATA_WIDTH (DATA_WIDTH)
+) u_bus_adder (
+	.a          (operand_a),
+	.b          (operand_b),
+	.sum        (sum_internal)
+);
+
+bus_register #(
+	.DATA_WIDTH (DATA_WIDTH)
+) u_bus_register (
+	.clk        (clk),
+	.resetn     (resetn),
+	.load_en    (load_en),
+	.d_in       (sum_internal),
+	.d_out      (result_out)
+);
+
+endmodule
+```
+
+If an even higher-level module or testbench needs to change the bus width (e.g., from 32-bit to 64-bit), it simply passes the new value into data_path_wrapper without touching any source code in the underlying submodules:
+
+```verilog
+data_path_wrapper #(
+	.DATA_WIDTH (64)
+) u_data_path_wrapper_64bit (
+	.clk        (clk),
+	.resetn     (resetn),
+	.load_en    (load_en),
+	.operand_a  (operand_a_64),
+	.operand_b  (operand_b_64),
+	.result_out (result_out_64)
+);
+```
+
+#### define  and ifdef Statements:
+
+__define__ statements are a great way to create global text-substitutions for constants, macros, or other reusable code snippets.
+
+__ifdef__ statements are useful for isolating code blocks for conditional compilation, allowing you to include or exclude certain parts of the code based on defined macros.
+
+__define__ directives exist in the global compilation scope. It is standard practice to place build-wide macros in a dedicated header file.
+
+```verilog
+`timescale 1ns / 1ps
+
+// Target Target Switch:
+// Define TARGET_SIMULATION for fast behavioral simulation.
+// Comment it out during Cadence Genus ASIC synthesis.
+`define TARGET_SIMULATION
+
+// Memory IP Selection:
+// Uncomment to swap out behavioral memory with foundry Hard-IP macros.
+// `define USE_FOUNDRY_SRAM_IP
+
+// Optional Feature Flags:
+// Enables additional hardware checking logic in the pipeline.
+`define FEATURE_PARITY_CHECK
+```
+
+Here is how this can be used in a memory controller module to demonstrate the use of __define__ and __ifdef__ statements:
+
+```verilog
+`timescale 1ns / 1ps
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Engineer: Samyak Nidhi
+// Last Modified: 04.08.2026
+// Module Name: memory_controller
+// Project Name: Silicon SoC kNN
+// Description: Memory controller demonstrating `define macro usage and `ifdef conditional compilation blocks.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+`include "config.vh"
+
+module memory_controller
+#(
+	parameter ADDR_WIDTH = 8,
+	parameter DATA_WIDTH = 32
+)(
+	input                         clk,
+	input                         resetn,
+	input                         mem_en,
+	input      [ADDR_WIDTH-1:0]   addr,
+	input      [DATA_WIDTH-1:0]   wdata,
+	output reg [DATA_WIDTH-1:0]   rdata,
+	output reg                    parity_err
+);
+
+`ifdef USE_FOUNDRY_SRAM_IP
+	// Instantiating TSMC/GF Vendor Hard-IP Cell for ASIC Tapeout
+	sram_256x32_macro u_asic_sram (
+		.CLK   (clk),
+		.CEN   (~mem_en),
+		.A     (addr),
+		.D     (wdata),
+		.Q     (rdata)
+	);
+`else
+	// Generic Behavioral Memory Model (Used for fast simulation prototyping)
+	reg [DATA_WIDTH-1:0] ram_matrix [0:(1<<ADDR_WIDTH)-1];
+
+	always @(posedge clk) begin
+		if (mem_en) begin
+			ram_matrix[addr] <= wdata;
+			rdata            <= ram_matrix[addr];
+		end
+	end
+`endif
+
+`ifdef FEATURE_PARITY_CHECK
+	// Parity check circuit is synthesized ONLY when FEATURE_PARITY_CHECK is defined
+	always @(posedge clk or negedge resetn) begin
+		if (!resetn) begin
+			parity_err <= 1'b0;
+		end else begin
+			if (mem_en)
+				parity_err <= ^rdata; // Even parity calculation
+		end
+	end
+`else
+	always @(*) begin
+		parity_err = 1'b0;
+	end
+`endif
+
+`ifdef TARGET_SIMULATION
+	// Display statements only exist in simulation and are compiled out for Genus
+	always @(posedge clk) begin
+		if (mem_en && (addr >= (1<<ADDR_WIDTH))) begin
+			$display("[WARN %0t] Memory access out of bounds! Address: 0x%h", $time, addr);
+		end
+	end
+`endif
+
+endmodule
+```
+
+> #### ⚠️ Crucial Guidelines for ASIC Synthesis (Cadence Genus)
+
+>__Scope Warning:__ __define__ macros are global. If you define __define DATA_WIDTH 32__ in *File A*, it can silently overwrite definitions in *File B* if compiled in the same session.
+
+>__Rule:__ Use __parameter__ or __localparam__ for module-level constants (bus widths, state machines). Reserve __define__ strictly for global build flags, target selection, or include files.
+
+>__Header Protection:__ Always wrap configuration headers in macro guards (similar to C/C++ #ifndef) to prevent duplicate definition warnings across multiple files:
+
+```verilog
+`ifndef CONFIG_VH
+`define CONFIG_VH
+
+// Macro definitions go here...
+
+`endif // CONFIG_VH
+```
 
 ---
+
+## FSM Coding
+This section could alone be a separate document as any large design will have multiple FSMs cross-talking with each other.
+
+When designing Finite State Machines (FSMs), the preferred standard is the __3-Always Block (3-segment)__ coding style. This methodology explicitly separates the state memory, the next-state logic, and the output logic into three distinct blocks. This is a widely accepted and practiced __Industry standard__ for FSM design.
+
+This separation prevents synthesis tools from inferring unwanted latches, makes debugging much easier in simulation, and allows the synthesis tool to easily identify and optimize the FSM structure.
+
+## 1. The Structure of a 3-Segment FSM
+
+1) __Segment 1:__ State Memory __(Sequential)__ - A clocked block that updates the current_state with the next_state on the clock edge, and handles asynchronous/synchronous resets.
+
+2) __Segment 2:__ Next-State Logic __(Combinational)__ - A purely combinational block __always @(*)__ that evaluates the current_state and inputs to determine the next_state.
+
+3) __Segment 3:__ Output Logic __(Sequential)__ - A block that determines the module's outputs based on the current_state __(Moore)__ or current_state and inputs __(Mealy)__. For ASIC designs, registered outputs __(sequential)__ are highly preferred to prevent combinational glitches from propagating through the design.
+
+## 2. General FSM Layout Rules
+
+1) __State Encoding:__ Always use `parameter` (or `localparam`) to define state names. Do not use hardcoded magic numbers in your logic blocks.
+
+2) __Variable Naming:__ Clearly define your state registers as `state` and `next_state`.
+
+4) __Default Assignments (Latch Avoidance):__ In the combinational next-state block, explicitly assign `next_state = state;` at the very top. This prevents the tool from inferring a latch if a specific conditional branch is missed.
+
+## 3. Handling Datapath Logic within Sequential FSMs
+
+When writing FSMs or general sequential logic, you will inevitably need to update datapath variables (like counters, addresses, or data payload). A strict distinction must be made between simple control arithmetic and complex datapath arithmetic.
+
+### The Rule:
+
+- __Simple Logic:__ Small, standard combinational logic such as incrementing or decrementing a counter `counter <= counter + 1'b1;` or setting a flag `flag <= 1'b1;` is perfectly acceptable directly inside the sequential `always @(posedge clk)` block. Synthesis tools easily infer these as standard incrementers/decrementers.
+
+- __Complex Logic:__ Large combinational logic such as chained arithmetic, multiplication, shifting, or deep address calculations should NEVER be computed directly inside the clocked block. Instead, calculate the result in a continuous assign statement or a separate always @(*) block using a `next_<signal_name> wire/reg`, and simply register that next_ signal inside the sequential block.
+
+### Rationale:
+
+1) __Datapath Optimization:__ Synthesis tools excel at *datapath extraction.* By isolating complex math in a pure combinational block, Genus can more easily restructure the math (e.g., merging adders, swapping multipliers) to meet aggressive timing and area constraints.
+
+2) __Resource Sharing:__ If a complex calculation is needed across multiple FSM states, computing it once in an assign statement allows the FSM to just route the result, rather than the synthesis tool accidentally instantiating redundant adders for every state.
+
+3) __Readability and STA:__ Isolating the datapath makes it trivial to identify the longest timing paths in *Static Timing Analysis (STA)* and keeps the FSM control block clean and easy to read.
+
+### Code Example:
+
+```verilog
+//------------------------------------------------//
+// Intermediate Signals for Datapath Computations //
+//------------------------------------------------//
+wire [31:0] next_address;
+
+always @(posedge clk)
+begin
+	if (!resetn_in)
+	begin
+        	counter <= 8'b0;
+        	address <= 32'b0;
+	end
+	else
+	begin
+		case (state)
+			IDLE:
+				counter <= 8'b0;
+
+			COMPUTE:
+			begin
+				counter <= counter + 1'b1;
+				address <= next_address;
+			end
+
+			default:
+			begin
+				counter <= counter;
+				address <= address;
+			end
+        	endcase
+    	end
+end
+
+/*
+ * offset is word-aligned and base_addr is byte-aligned, so
+ * we need to multiply offset by 4 (<<2) before adding it to
+ * base_addr. Final result is converted back to word-aligned
+ * address.
+ */
+assign next_address = (base_addr + (offset << 2)) >> 2;
+```
+
+## 4. Managing FSM Complexity and State Limits
+To maintain highly readable, easily verifiable, and timing-clean logic, FSMs must not become bloated spider webs, where every state is interconnected. Large FSMs with dozens of states create massive cyclomatic complexity, making simulation debugging a nightmare and often leading to deeply nested logic that fails synthesis timing constraints.
+
+### The Rule:
+- __Maximum State Limit:__ An individual FSM should not exceed a total of __5 states__.
+- __Linear Code Progression:__ When writing your case(state) block, list the states in a linear, logical order of execution (e.g., `IDLE` $\rightarrow$ `START` $\rightarrow$ `COMPUTE` $\rightarrow$ `DONE`). Avoid scattering states randomly throughout the block. Even if the FSM loops or branches, the visual layout in the code should follow the primary *happy path* of the data flow.
+- __FSM Partitioning:__ If your control logic inherently requires more than 5 states, you must break the FSM into multiple, smaller communicating FSMs (often referred to as __Hierarchical FSMs__ or __interacting state machines__).
+
+### Rationale:
+
+- __Readability:__ A 5-state limit guarantees that the entire next-state logic block can easily fit on a single monitor screen, eliminating the need to scroll up and down to understand the control flow.
+- __Timing & Area:__ Synthesis tools optimize small FSMs highly effectively. When an FSM grows too large, the tool struggles to assign optimal state encodings, resulting in bloated area and poor setup timing on the state registers.
+- __Linear Tracing:__ Keeping the states in sequential order in your Verilog file allows another engineer to read the code top-to-bottom like a story, rather than jumping around non-linearly to figure out where the state machine goes next.
+
+## 5. Communication Between FSMs and Default Case
+Signals used to communicate between different FSMs (cross-talk) should be implemented as __single-cycle pulses__. To automatically generate a clean pulse without complex state-tracking, assign the signal to its inactive state (e.g., 0) immediately after the synchronous `else` statement and before the `case` statement.
+
+Signals that do not need to be pulses (i.e., level signals that hold their value across multiple clock cycles) should not be assigned before the `case` statement. Instead, to prevent latching unwanted values during illegal states, explicitly assign these signals to a known, safe value inside the `default` clause of the case statement.
+
+Code Example:
+
+```verilog
+always @(posedge clk)
+begin
+	if (!resetn)
+	begin
+		state       <= IDLE;
+		fsm_pulse   <= 1'b0;
+		fsm_level   <= 1'b0;
+	end
+	else
+	begin
+    		fsm_pulse <= 1'b0; // Pulse Signal
+
+		case (state)
+      			IDLE:
+			begin
+        			if (trigger)
+				begin
+          				state <= ACTIVE;
+          				fsm_pulse <= 1'b1;
+          				fsm_level <= 1'b1;
+        			end
+      			end
+
+      			ACTIVE:
+			begin
+        			if (done)
+				begin
+					state <= IDLE;
+					fsm_level <= 1'b0;
+        			end
+      			end
+
+      			default:
+			begin
+        			state <= IDLE;
+        			fsm_level <= 1'b0; // Non pulse signal, assigned to safe value in default case
+      			end
+		endcase
+	end
+end
+```
+
+## 6. Positive if Conditions (Happy Path)
+
+Drawing inspiration from the Linux Kernel Coding Style, conditional logic should always prioritize the primary active state ("happy path") using positive logic.
+
+Inverting condition checks or nesting the main logic deep within an else branch increases cognitive overhead, makes RTL hard to trace during hardware debugging, and raises the likelihood of inverted-logic bugs.
+
+### The Rule:
+1) __Use Positive Logic First:__ Always structure your primary conditional evaluation around positive assertions e.g., `if (valid)` or `if (enable)` rather than negative assertions e.g., `if (!invalid)` or `if (!disabled)`.
+
+2) __Prioritize the Happy Path:__ Place the primary operational logic directly inside the main `if` block, leaving error handling, stalls, or idle states for the `else` branch or default assignments.
+
+3) __Avoid Inverted Signal Naming:__ Do not use double negatives in code e.g., `if (!not_ready)`. The only standard exception to positive logic is __active-low__ hardware control signals (such as `resetn`).
+
+### Rationale:
+1) __Reduced Cognitive Load:__ Human brains process positive logic far faster than double negatives. Inverted conditions force anyone reading the code to mentally negate signals at every branch.
+
+2) __Traceability in Waveforms:__ When debugging gate-level or RTL simulations, following a positive *happy path* makes it significantly easier to trace active high flags (`valid`, `ready`, `enable`) directly against state transitions.
+
+3) __Synthesis Integrity:__ While tools like Cadence Genus optimize and collapse inverted gates ($NOT \rightarrow NAND/NOR$) seamlessly during synthesis, structuring logic around positive conditions ensures the design intent is clear, preventing accidental latch inference or unexpected multiplexer priorities.
+
+### Bade Code Example:
+
+```verilog
+always @(posedge clk)
+begin
+	if (!resetn)
+	begin
+		tx_start <= 1'b0;
+		tx_data  <= 8'h00;
+	end
+	else
+	begin
+		if (!rx_valid)
+            		tx_start <= 1'b0;
+		else
+		begin
+            		if (!fifo_full)
+			begin
+                		tx_start <= 1'b1;
+                		tx_data  <= rx_data;
+            		end
+			else
+                		tx_start <= 1'b0;
+        	end
+    	end
+end
+```
+
+### Good Code Example:
+
+```verilog
+always @(posedge clk)
+begin
+	if (!resetn)
+	begin
+		tx_start <= 1'b0;
+		tx_data  <= 8'h00;
+	end
+	else
+        	tx_start <= 1'b0;
+        	if (rx_valid && !fifo_full)
+		begin
+            		tx_start <= 1'b1;
+            		tx_data  <= rx_data;
+        	end
+    	end
+end
+```
+
+Here, by interntionally asserting that `tx_start` value must ONLY change when `rx_valid` is __high__ and `fifo_full` is __low__, we have reduced the number of nested if-else statements and made the code more readable.
+
+
+## Putting it all together
+
+```verilog
+`timescale 1ns / 1ps
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Engineer: Samyak Nidhi
+// Last Modified: 04.08.2026
+// Module Name: fsm_data_processor
+// Project Name: Silicon SoC kNN
+// Description:
+// 3-Segment, 5-state FSM controller for memory address processing.
+// Demonstrates ASIC synthesis rules including datapath separation, pulse/level
+// signal cross-talk generation, positive logic evaluation, and latch avoidance.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+module fsm_data_processor
+#(
+	parameter ADDR_WIDTH   = 32,
+	parameter OFFSET_WIDTH = 16
+)(
+	input clk,
+	input resetn,
+	input start_req,
+	input data_valid,
+	input error_flag,
+	input [ADDR_WIDTH-1:0] base_addr,
+	input [OFFSET_WIDTH-1:0] offset,
+
+	output reg busy,
+	output reg done_pulse,
+	output reg error_pulse,
+	output reg [ADDR_WIDTH-1:0] out_addr,
+	output reg [7:0] process_count
+);
+
+//-------------------------------------//
+// Parameter definition for FSM States //
+//-------------------------------------//
+parameter [2:0] IDLE    = 3'b000,
+		INIT    = 3'b001,
+		PROCESS = 3'b010,
+		DONE    = 3'b011,
+		FAULT   = 3'b100;
+
+//---------------//
+// State signals //
+//---------------//
+reg [2:0] state, next_state;
+
+
+wire [ADDR_WIDTH-1:0] next_calculated_addr;
+
+//----------------------------//
+// FSM State Transition Logic //
+//----------------------------//
+always @(posedge clk)
+begin
+	if (!resetn)
+		state <= IDLE;
+	else
+		state <= next_state;
+end
+
+//------------------//
+// State Operations //
+//------------------//
+always @(posedge clk)
+begin
+	if (!resetn)
+	begin
+		busy          <= 1'b0;
+		done_pulse    <= 1'b0;
+		error_pulse   <= 1'b0;
+		out_addr      <= {ADDR_WIDTH{1'b0}};
+		process_count <= 8'd0;
+	end
+	else
+	begin
+		done_pulse  <= 1'b0;
+		error_pulse <= 1'b0;
+
+		case (next_state)
+			IDLE:
+			begin
+				busy          <= 1'b0;
+				process_count <= 8'd0;
+			end
+
+			INIT:
+			begin
+				busy <= 1'b1;
+				out_addr <= next_calculated_addr;
+			end
+
+			PROCESS:
+			begin
+				busy <= 1'b1;
+				process_count <= process_count + 1'b1;
+			end
+
+			DONE:
+			begin
+				busy       <= 1'b0;
+				done_pulse <= 1'b1;
+			end
+
+			FAULT:
+			begin
+				busy        <= 1'b0;
+				error_pulse <= 1'b1;
+			end
+
+			default:
+			begin
+				busy          <= 1'b0;
+				process_count <= 8'd0;
+				out_addr      <= {ADDR_WIDTH{1'b0}};
+			end
+		endcase
+	end
+end
+
+//--------------------------------//
+// Next-State Combinational Logic //
+//--------------------------------//
+always @(*)
+begin
+	next_state = state; // Default assignment to prevent latches
+
+	case (state)
+		IDLE:
+		begin
+			if (start_req)
+				next_state = INIT;
+			else
+				next_state = IDLE;
+		end
+
+		INIT:
+		begin
+			if (error_flag)
+				next_state = FAULT;
+			else if (data_valid)
+				next_state = PROCESS;
+			else
+				next_state = INIT;
+		end
+
+		PROCESS:
+		begin
+			if (error_flag)
+				next_state = FAULT;
+			else if (process_count == 8'd10)
+				next_state = DONE;
+			else
+				next_state = PROCESS;
+		end
+
+		DONE:
+		begin
+			next_state = IDLE;
+		end
+
+		FAULT:
+		begin
+			if (start_req)
+				next_state = IDLE;
+			else
+				next_state = FAULT;
+		end
+
+		default:
+		begin
+			next_state = IDLE;
+		end
+	endcase
+end
+
+/*
+ * offset is word-aligned and base_addr is byte-aligned, so
+ * we need to multiply offset by 4 (<<2) before adding it to
+ * base_addr. Final result is converted back to word-aligned
+ * address.
+ */
+assign next_calculated_addr = (base_addr + (offset << 2)) >> 2;
+
+endmodule
+```
+
+As seen in above code:
+- Next-State Combinational logic has all `if` conditions in positive logic and the happy path is prioritized and closed with `else` statements to avoid latches.
+
+- Comments only explain intent and purpose of the code, NOT how the logic works for `next_calculated_addr`.
+
+- `data_pulse` and `error_pulse` are single-cycle pulse signals generated by assigning them to 0 at the start of the sequential block, and only asserting them high in the specific states where they are needed. These signals can be used to communicate between FSMs without the risk of latching unwanted values.
 
 ## Testbenches
 
@@ -738,42 +1517,42 @@ When instantiating the Unit Under Test (UUT) in the testbench, follow the same p
 
 ```verilog
 SRAM_controller #(
-	.N				  (N),
-	.W 				  (W)
-	) dut (
-	.clk              (clk),
-	.resetn_in        (resetn_in),
-	.load_en          (load_en),
-	.i_rx             (i_rx),
-	.mode_sel         (mode_sel),
-	.load_busy_core   (load_busy_core),
-	.load_done_core   (load_done_core),
-	.CORE_WDATA       (CORE_WDATA),
-	.CORE_ADDR        (CORE_ADDR),
+	.N (N),
+	.W (W)
+) dut (
+	.clk (clk),
+	.resetn_in (resetn_in),
+	.load_en (load_en),
+	.i_rx (i_rx),
+	.mode_sel (mode_sel),
+	.load_busy_core (load_busy_core),
+	.load_done_core (load_done_core),
+	.CORE_WDATA (CORE_WDATA),
+	.CORE_ADDR (CORE_ADDR),
 	.sync_core_resetn (sync_core_resetn),
-	.boot_en          (boot_en),
-	.SRAM_ADDR_RAW    (SRAM_ADDR_RAW),
-	.fw_load_en       (fw_load_en),
-	.SRAM_WDATA       (SRAM_WDATA),
-	.load_busy        (load_busy),
-	.load_done        (load_done),
-	.o_rts            (o_rts),
+	.boot_en (boot_en),
+	.SRAM_ADDR_RAW (SRAM_ADDR_RAW),
+	.fw_load_en (fw_load_en),
+	.SRAM_WDATA (SRAM_WDATA),
+	.load_busy (load_busy),
+	.load_done (load_done),
+	.o_rts (o_rts),
 	.UART_check_start (UART_check_start),
-	.UART_rx_error    (UART_rx_error),
-	.header_fail      (header_fail),
-	.sram_valid_uart  (sram_valid_uart),
-	.sram_wea_uart    (sram_wea_uart)
+	.UART_rx_error (UART_rx_error),
+	.header_fail (header_fail),
+	.sram_valid_uart (sram_valid_uart),
+	.sram_wea_uart (sram_wea_uart)
 	);
 
 addr_decoder #(
-	.N					  (N)
-	) u_addr_decoder (
-	.fw_load_en           (fw_load_en),
-	.core_decoder_en      (core_decoder_en),
+	.N (N)
+) u_addr_decoder (
+	.fw_load_en (fw_load_en),
+	.core_decoder_en (core_decoder_en),
 	.core_decoder_en_remap(core_decoder_en_remap),
-	.mode_sel             (mode_sel),
-	.SRAM_ADDR_RAW        (SRAM_ADDR_RAW),
-	.SRAM_ADDR            (decoded_SRAM_ADDR)
+	.mode_sel (mode_sel),
+	.SRAM_ADDR_RAW (SRAM_ADDR_RAW),
+	.SRAM_ADDR (decoded_SRAM_ADDR)
 	);
 ```
 
