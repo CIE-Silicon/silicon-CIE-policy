@@ -57,7 +57,6 @@ In short, 8-character indents make things easier to read and have the added bene
 - Open __Settings__ (File > Preferences > Settings)
 - Search for __Tab Size__ in the search bar.
 - Set __Tab Size__ to __8__.
-- Ensure that __Insert Spaces__ is unchecked if you want to use actual tab characters instead of spaces.
 
 ![alt text](images/image-3.png)
 ![alt text](images/image-4.png)
@@ -223,40 +222,40 @@ Here is an example of all the above tips put together in a single code snippet:
 ```verilog
 module boot_controller
 (
-	//from external
-	input wire clk,
-	input wire load_en,
-	input wire resetn_in,
-	input wire [1:0] mode_sel,
+        //from external
+        input wire clk,
+        input wire load_en,
+        input wire resetn_in,
+        input wire [1:0] mode_sel,
 
-	//from UART
-	input wire UART_load_done,
-	input wire UART_load_busy,
+        //from UART
+        input wire UART_load_done,
+        input wire UART_load_busy,
 
-	//from FIFO
-	input wire FIFO_load_done,
-   	input wire FIFO_load_busy,
+        //from FIFO
+        input wire FIFO_load_done,
+        input wire FIFO_load_busy,
 
-	//from core
-	input wire boot_load_done,
-	input wire boot_load_busy,
+        //from core
+        input wire boot_load_done,
+        input wire boot_load_busy,
 
-	//to core
-   	output reg resetn_core_req,
-   	output reg boot_en,
+        //to core
+        output reg resetn_core_req,
+        output reg boot_en,
 
-	//to SRAM Controller
-	output reg fw_load_en,
+        //to SRAM Controller
+        output reg fw_load_en,
 
-	// to UART
-	output reg UART_rx_en,
+        // to UART
+        output reg UART_rx_en,
 
-	// to FIFO
-	output reg FIFO_rx_en,
+        // to FIFO
+        output reg FIFO_rx_en,
 
-	// to external
-   	output reg 	load_busy,
-   	output reg 	load_done
+        // to external
+        output reg load_busy,
+        output reg load_done
 );
 
 
@@ -269,20 +268,20 @@ module boot_controller
  */
 always @ (posedge clk)
 begin
-	if(!resetn_in)
-	begin
-		state <= IDLE;
-		fw_load_done <=0;
-	end
-	else
-	begin
-		if (state == IDLE && load_en)
-			fw_load_done <= 1'b0;
-		else
-			fw_load_done <= fw_load_done_next;
+        if(!resetn_in)
+        begin
+                state <= IDLE;
+                fw_load_done <=0;
+        end
+        else
+        begin
+                if (state == IDLE && load_en)
+                        fw_load_done <= 1'b0;
+                else
+                        fw_load_done <= fw_load_done_next;
 
-	state <= next_state;
-	end
+        state <= next_state;
+        end
 end
 ```
 
@@ -299,10 +298,10 @@ An example of this is shown below:
 // parameter definition for FSM States //
 //-------------------------------------//
 parameter [2:0] IDLE = 3'b000,
-		SAMPLE = 3'b001,
-		FIFO_LOAD = 3'b010,
-		UART_LOAD = 3'b011,
-		RST_RELEASE = 3'b100;
+                SAMPLE = 3'b001,
+                FIFO_LOAD = 3'b010,
+                UART_LOAD = 3'b011,
+                RST_RELEASE = 3'b100;
 
 //-----------------------//
 // internal done signals //
@@ -330,31 +329,31 @@ wire done_any;
 // boot_controller instance //
 //--------------------------//
 boot_controller u_boot_ctrl (
-	.clk			(clk),
-   	.resetn_in		(resetn_in),
-   	.load_en		(load_en),
-   	.mode_sel		(mode_sel),
+        .clk (clk),
+        .resetn_in (resetn_in),
+        .load_en (load_en),
+        .mode_sel (mode_sel),
 
-   	// UART signals
-   	.UART_load_done	(UART_ld_done),
-   	.UART_load_busy	(UART_load_busy),
-   	.UART_rx_en		(UART_rx_enable),
+        // UART signals
+        .UART_load_done (UART_ld_done),
+        .UART_load_busy (UART_load_busy),
+        .UART_rx_en (UART_rx_enable),
 
-   	// FIFO signals
-   	.FIFO_load_done (FIFO_ld_done),
-   	.FIFO_load_busy (FIFO_load_busy),
-   	.FIFO_rx_en		(FIFO_rx_en),
+        // FIFO signals
+        .FIFO_load_done (FIFO_ld_done),
+        .FIFO_load_busy (FIFO_load_busy),
+        .FIFO_rx_en (FIFO_rx_en),
 
-   	// Boot signals
-   	.boot_load_done (load_done_core),
-   	.boot_load_busy (load_busy_core),
-   	.boot_en		(boot_en),
+        // Boot signals
+        .boot_load_done (load_done_core),
+        .boot_load_busy (load_busy_core),
+        .boot_en (boot_en),
 
-   	// Outputs
-   	.resetn_core_req(resetn_core_req),
-   	.fw_load_en		(fw_load_en),
-   	.load_done		(load_done),
-   	.load_busy		(load_busy)
+        // Outputs
+        .resetn_core_req(resetn_core_req),
+        .fw_load_en (fw_load_en),
+        .load_done (load_done),
+        .load_busy (load_busy)
 );
 ```
 
@@ -405,46 +404,46 @@ Here is an exmple of a block of code with more than 3 levels of nesting:
 
 ```verilog
 module packet_router (
-	input wire clk,
-	input wire rst_n,
-	input wire pkt_valid,
-	input wire ready,
-	input wire secure_mode,
-	input wire [1:0] dest_port,
-	output reg [2:0] route_status
+        input wire clk,
+        input wire rst_n,
+        input wire pkt_valid,
+        input wire ready,
+        input wire secure_mode,
+        input wire [1:0] dest_port,
+        output reg [2:0] route_status
 );
 
-always @(posedge clk or negedge rst_n)
+always @(posedge clk)
 begin
-	if (!rst_n)
-		route_status <= 3'b000;
-	else
-	begin
-		// Check if packet is valid
-		if (pkt_valid)
-		begin
-		// Check if downstream channel is ready
-			if (ready)
-			begin
-				// Check if security check passes
-				if (!secure_mode)
-				begin
-					// Check target destination port
-					if (dest_port == 2'b01)
-						// Final leaf assignment
-						route_status <= 3'b101;
-					else
-						route_status <= 3'b100;
-				end
-				else
-					route_status <= 3'b011;
-			end
-			else
-				route_status <= 3'b010;
-		end
-		else
-			route_status <= 3'b001;
-	end
+        if (!rst_n)
+                route_status <= 3'b000;
+        else
+        begin
+                // Check if packet is valid
+                if (pkt_valid)
+                begin
+                // Check if downstream channel is ready
+                        if (ready)
+                        begin
+                                // Check if security check passes
+                                if (!secure_mode)
+                                begin
+                                        // Check target destination port
+                                        if (dest_port == 2'b01)
+                                                // Final leaf assignment
+                                                route_status <= 3'b101;
+                                        else
+                                                route_status <= 3'b100;
+                                end
+                                else
+                                        route_status <= 3'b011;
+                        end
+                        else
+                                route_status <= 3'b010;
+                end
+                else
+                        route_status <= 3'b001;
+        end
 end
 
 endmodule
@@ -463,36 +462,36 @@ Here is a better way to write the same logic with 3 or less levels of nesting:
 
 ```verilog
 module packet_router (
-	input wire clk,
-	input wire rst_n,
-	input wire pkt_valid,
-	input wire ready,
-	input wire secure_mode,
-	input wire [1:0] dest_port,
-	output reg [2:0] route_status
+        input wire clk,
+        input wire rst_n,
+        input wire pkt_valid,
+        input wire ready,
+        input wire secure_mode,
+        input wire [1:0] dest_port,
+        output reg [2:0] route_status
 );
 
 always @(posedge clk or negedge rst_n)
 begin
         if (!rst_n)
-        	route_status <= 3'b000;
-	else
-	begin
-        	if (!pkt_valid)
-                	route_status <= 3'b001;
-		else if (!ready)
-                	route_status <= 3'b010;
-            	else if (secure_mode)
-                	route_status <= 3'b011;
-            	else
-		begin
-                	case (dest_port)
-                    		2'b01:
-					route_status <= 3'b101;
-                    		default:
-					route_status <= 3'b100;
-			endcase
-            	end
+                route_status <= 3'b000;
+        else
+        begin
+                if (!pkt_valid)
+                        route_status <= 3'b001;
+                else if (!ready)
+                        route_status <= 3'b010;
+                else if (secure_mode)
+                        route_status <= 3'b011;
+                else
+                begin
+                        case (dest_port)
+                                    2'b01:
+                                        route_status <= 3'b101;
+                                    default:
+                                        route_status <= 3'b100;
+                        endcase
+                end
         end
 end
 
@@ -519,8 +518,8 @@ Bad Code:
 ```verilog
 always @(*)
 begin
-    if (enable)
-        data_out = data_in;
+        if (enable)
+                data_out = data_in;
 end
 ```
 Here, if `enable` is low, `data_out` retains its previous value, which infers a latch.
@@ -528,9 +527,9 @@ Here, if `enable` is low, `data_out` retains its previous value, which infers a 
 ```verilog
 always @(*)
 begin
-    data_out = 1'b0;
-    if (enable)
-        data_out = data_in;
+        data_out = 1'b0;
+        if (enable)
+                data_out = data_in;
 end
 ```
 This logic synthesies into an *AND gate* with `enable` as one input and `data_in` as the other.
@@ -572,13 +571,13 @@ end
 ```verilog
 always @(posedge clk)
 begin
-	if (!resetn)
+        if (!resetn)
 
-		---
+                ---
 
-	else
+        else
 
-		---
+                ---
 
 end
 ```
@@ -600,8 +599,8 @@ For long assign statements, the preferred style is:
 
 ```verilog
 assign long_signal_name = signal_a & signal_b &
-			  			  signal_c & signal_d &
-			  			  signal_e & signal_f;
+                                                    signal_c & signal_d &
+                                                    signal_e & signal_f;
 ```
 
 This style allows for clear separation of the different signals being ANDed together, making it easier to read and understand the logic.
@@ -615,44 +614,44 @@ In general, for module definitions, keep the braces on separate lines for both p
 ```verilog
 module SRAM_controller
 #(
-	parameter 			N = 12,
-	parameter 			W = 32
+        parameter N = 12,
+        parameter W = 32
 )(
-	//from external
-	input clk,
-	input resetn_in,
-	input load_en,
-	input i_rx,
-	input [1:0] mode_sel,
+        //from external
+        input clk,
+        input resetn_in,
+        input load_en,
+        input i_rx,
+        input [1:0] mode_sel,
 
-   	//from Core
-   	input wire load_busy_core,
-   	input wire load_done_core,
-   	input wire [W-1:0] CORE_WDATA,
-   	input wire [31:0] CORE_ADDR,
+        //from Core
+        input wire load_busy_core,
+        input wire load_done_core,
+        input wire [W-1:0] CORE_WDATA,
+        input wire [31:0] CORE_ADDR,
 
-   	//to Core
-   	output wire sync_core_resetn,
-   	output wire boot_en,
+        //to Core
+        output wire sync_core_resetn,
+        output wire boot_en,
 
-   	//to address decoder
-   	output wire [31:0] SRAM_ADDR_RAW,
-   	output wire fw_load_en,
+        //to address decoder
+        output wire [31:0] SRAM_ADDR_RAW,
+        output wire fw_load_en,
 
-   	//to SRAM
-   	output wire [31:0] SRAM_WDATA,
+        //to SRAM
+        output wire [31:0] SRAM_WDATA,
 
-   	//to external
-   	output load_busy,
-   	output load_done,
-   	output o_rts,
-   	output UART_check_start,
-   	output UART_rx_error,
-   	output header_fail,
+        //to external
+        output load_busy,
+        output load_done,
+        output o_rts,
+        output UART_check_start,
+        output UART_rx_error,
+        output header_fail,
 
-   	// to BRAM IP
-   	output sram_valid_uart,
-   	output sram_wea_uart
+        // to BRAM IP
+        output sram_valid_uart,
+        output sram_wea_uart
 );
 ```
 
@@ -663,21 +662,21 @@ For submodule instantiations, however, the preferred style is to keep the openin
 // controller_path_mux instance  //
 //-------------------------------//
 controller_path_mux #(
-	.N (N),
-	.W (W)
+        .N (N),
+        .W (W)
 ) u_controller_path_mux (
-	.mode_sel (mode_sel),
-	.fw_load_en (fw_load_en),
-	.CORE_WDATA (CORE_WDATA),
-	.CORE_ADDR (CORE_ADDR),
-	.UART_SRAM_WDATA(UART_SRAM_WDATA),
-	.UART_SRAM_ADDR	(UART_SRAM_ADDR),
-	.FIFO_SRAM_WDATA(FIFO_SRAM_WDATA),
-	.FIFO_SRAM_ADDR	(FIFO_SRAM_ADDR),
-	.FW_ADDR (FW_ADDR),
-	.FW_WDATA (FW_WDATA),
-	.SRAM_ADDR_RAW	(SRAM_ADDR_RAW),
-	.SRAM_WDATA (SRAM_WDATA)
+        .mode_sel (mode_sel),
+        .fw_load_en (fw_load_en),
+        .CORE_WDATA (CORE_WDATA),
+        .CORE_ADDR (CORE_ADDR),
+        .UART_SRAM_WDATA (UART_SRAM_WDATA),
+        .UART_SRAM_ADDR (UART_SRAM_ADDR),
+        .FIFO_SRAM_WDATA (FIFO_SRAM_WDATA),
+        .FIFO_SRAM_ADDR (FIFO_SRAM_ADDR),
+        .FW_ADDR (FW_ADDR),
+        .FW_WDATA (FW_WDATA),
+        .SRAM_ADDR_RAW (SRAM_ADDR_RAW),
+        .SRAM_WDATA (SRAM_WDATA)
 );
 ```
 
@@ -694,9 +693,9 @@ For starters, any `if-else` or `case` statement with ONLY ONE statement in its b
 
 ```verilog
 if (condition)
-    statement;
+        statement;
 else
-    statement;
+        statement;
 ```
 For `if-else` and `case` statements with MORE THAN ONE statement in the body, it is preferred to have `begin` and `end` at the same indentation level.
 
@@ -709,20 +708,20 @@ This easily helps to visually separate the different blocks of code and makes it
  */
 always @ (posedge clk)
 begin
-	if(!resetn_in)
-	begin
-		state <= IDLE;
-		fw_load_done <=0;
-    	end
-    	else
-    	begin
-        	if (state == IDLE && load_en)
-			fw_load_done <= 1'b0;
-		else
-			fw_load_done <= fw_load_done_next;
+        if(!resetn_in)
+        begin
+                state <= IDLE;
+                fw_load_done <=0;
+        end
+        else
+        begin
+                if (state == IDLE && load_en)
+                        fw_load_done <= 1'b0;
+                else
+                        fw_load_done <= fw_load_done_next;
 
-		state <= next_state;
-    	end
+                state <= next_state;
+        end
 end
 ```
 
@@ -731,67 +730,68 @@ Here is an example with case statement:
 ```verilog
 always @ (posedge clk)
 begin
-	if(!resetn_in)
-	begin
-		resetn_core_req <= 0;
-		fw_load_en <= 0;
-		boot_en <= 0;
-		UART_rx_en <= 0;
-		FIFO_rx_en <= 0;
-	end
-	else
-	begin
-		case(state)
-	    		IDLE:
-			begin
-				resetn_core_req <= 0;
-				if(load_en & !fw_load_done)
-					fw_load_en <= 1;
-	    		end
+        if(!resetn_in)
+        begin
+                resetn_core_req <= 0;
+                fw_load_en <= 0;
+                boot_en <= 0;
+                UART_rx_en <= 0;
+                FIFO_rx_en <= 0;
+        end
+        else
+        begin
+                case(state)
+                        IDLE:
+                        begin
+                                resetn_core_req <= 0;
+                                if(load_en & !fw_load_done)
+                                        fw_load_en <= 1;
+                        end
 
-	    		SAMPLE:
-			begin
-				if(mode_sel == 2'b00)
-					boot_en <= 1;
-				else
-					boot_en <=0;
-	    		end
+                        SAMPLE:
+                        begin
+                                if(mode_sel == 2'b00)
+                                        boot_en <= 1;
+                                else
+                                        boot_en <=0;
+                        end
 
-	    		FIFO_LOAD:
-			begin
-				FIFO_rx_en <= 1;
+                        FIFO_LOAD:
+                        begin
+                                FIFO_rx_en <= 1;
 
-				if(fw_load_done_next)
-					fw_load_en <= 0;
-			end
+                                if(fw_load_done_next)
+                                        fw_load_en <= 0;
+                        end
 
-	    		UART_LOAD:
-			begin
-				UART_rx_en <= 1;
-				if(fw_load_done_next)
-					fw_load_en <= 0;
-			end
+                        UART_LOAD:
+                        begin
+                                UART_rx_en <= 1;
+                                if(fw_load_done_next)
+                                        fw_load_en <= 0;
+                        end
 
-	    		RST_RELEASE:
-			begin
-				resetn_core_req <= 1;
-				if (fw_load_done)
-				begin
-					boot_en <= 0;
-		    			FIFO_rx_en <= 0;
-		    			UART_rx_en <= 0;
-				end
-			end
-			default:
-			begin
-				resetn_core_req <= 0;
-				fw_load_en <= 0;
-				boot_en <= 0;
-				UART_rx_en <= 0;
-				FIFO_rx_en <= 0;
-			end
-		endcase
-	end
+                        RST_RELEASE:
+                        begin
+                                resetn_core_req <= 1;
+                                if (fw_load_done)
+                                begin
+                                        boot_en <= 0;
+                                            FIFO_rx_en <= 0;
+                                            UART_rx_en <= 0;
+                                end
+                        end
+
+                        default:
+                        begin
+                                resetn_core_req <= 0;
+                                fw_load_en <= 0;
+                                boot_en <= 0;
+                                UART_rx_en <= 0;
+                                FIFO_rx_en <= 0;
+                        end
+                endcase
+        end
 end
 ```
 
@@ -837,14 +837,14 @@ Consider this example below of 2 different child modules with different default 
 
 module bus_adder
 #(
-	parameter DATA_WIDTH = 16
+        parameter DATA_WIDTH = 16
 )(
-	input  [DATA_WIDTH-1:0] a,
-	input  [DATA_WIDTH-1:0] b,
-	output [DATA_WIDTH-1:0] sum
+        input  [DATA_WIDTH-1:0] a,
+        input  [DATA_WIDTH-1:0] b,
+        output [DATA_WIDTH-1:0] sum
 );
 
-	assign sum = a + b;
+        assign sum = a + b;
 
 endmodule
 ```
@@ -855,25 +855,25 @@ endmodule
 
 module bus_register
 #(
-	parameter DATA_WIDTH = 16
+        parameter DATA_WIDTH = 16
 )(
-	input                         clk,
-	input                         resetn,
-	input                         load_en,
-	input      [DATA_WIDTH-1:0]   d_in,
-	output reg [DATA_WIDTH-1:0]   d_out
+        input                         clk,
+        input                         resetn,
+        input                         load_en,
+        input      [DATA_WIDTH-1:0]   d_in,
+        output reg [DATA_WIDTH-1:0]   d_out
 );
 
-	always @(posedge clk)
-	begin
-		if (!resetn)
-			d_out <= {DATA_WIDTH{1'b0}};
-		else
-		begin
-			if (load_en)
-				d_out <= d_in;
-		end
-	end
+        always @(posedge clk)
+        begin
+                if (!resetn)
+                        d_out <= {DATA_WIDTH{1'b0}};
+                else
+                begin
+                        if (load_en)
+                                d_out <= d_in;
+                end
+        end
 
 endmodule
 ```
@@ -885,34 +885,34 @@ The parent/wrapper module can then define its own parameter list and override th
 
 module data_path_wrapper
 #(
-	parameter DATA_WIDTH = 32
+        parameter DATA_WIDTH = 32
 )(
-	input                         clk,
-	input                         resetn,
-	input                         load_en,
-	input      [DATA_WIDTH-1:0]   operand_a,
-	input      [DATA_WIDTH-1:0]   operand_b,
-	output     [DATA_WIDTH-1:0]   result_out
+        input                         clk,
+        input                         resetn,
+        input                         load_en,
+        input      [DATA_WIDTH-1:0]   operand_a,
+        input      [DATA_WIDTH-1:0]   operand_b,
+        output     [DATA_WIDTH-1:0]   result_out
 );
 
 wire [DATA_WIDTH-1:0] sum_internal;
 
 bus_adder #(
-	.DATA_WIDTH (DATA_WIDTH)
+        .DATA_WIDTH (DATA_WIDTH)
 ) u_bus_adder (
-	.a          (operand_a),
-	.b          (operand_b),
-	.sum        (sum_internal)
+        .a          (operand_a),
+        .b          (operand_b),
+        .sum        (sum_internal)
 );
 
 bus_register #(
-	.DATA_WIDTH (DATA_WIDTH)
+        .DATA_WIDTH (DATA_WIDTH)
 ) u_bus_register (
-	.clk        (clk),
-	.resetn     (resetn),
-	.load_en    (load_en),
-	.d_in       (sum_internal),
-	.d_out      (result_out)
+        .clk        (clk),
+        .resetn     (resetn),
+        .load_en    (load_en),
+        .d_in       (sum_internal),
+        .d_out      (result_out)
 );
 
 endmodule
@@ -922,14 +922,14 @@ If an even higher-level module or testbench needs to change the bus width (e.g.,
 
 ```verilog
 data_path_wrapper #(
-	.DATA_WIDTH (64)
+        .DATA_WIDTH (64)
 ) u_data_path_wrapper_64bit (
-	.clk        (clk),
-	.resetn     (resetn),
-	.load_en    (load_en),
-	.operand_a  (operand_a_64),
-	.operand_b  (operand_b_64),
-	.result_out (result_out_64)
+        .clk        (clk),
+        .resetn     (resetn),
+        .load_en    (load_en),
+        .operand_a  (operand_a_64),
+        .operand_b  (operand_b_64),
+        .result_out (result_out_64)
 );
 ```
 
@@ -974,62 +974,67 @@ Here is how this can be used in a memory controller module to demonstrate the us
 
 module memory_controller
 #(
-	parameter ADDR_WIDTH = 8,
-	parameter DATA_WIDTH = 32
+        parameter ADDR_WIDTH = 8,
+        parameter DATA_WIDTH = 32
 )(
-	input                         clk,
-	input                         resetn,
-	input                         mem_en,
-	input      [ADDR_WIDTH-1:0]   addr,
-	input      [DATA_WIDTH-1:0]   wdata,
-	output reg [DATA_WIDTH-1:0]   rdata,
-	output reg                    parity_err
+        input                         clk,
+        input                         resetn,
+        input                         mem_en,
+        input      [ADDR_WIDTH-1:0]   addr,
+        input      [DATA_WIDTH-1:0]   wdata,
+        output reg [DATA_WIDTH-1:0]   rdata,
+        output reg                    parity_err
 );
 
 `ifdef USE_FOUNDRY_SRAM_IP
-	// Instantiating TSMC/GF Vendor Hard-IP Cell for ASIC Tapeout
-	sram_256x32_macro u_asic_sram (
-		.CLK   (clk),
-		.CEN   (~mem_en),
-		.A     (addr),
-		.D     (wdata),
-		.Q     (rdata)
-	);
+        // Instantiating TSMC/GF Vendor Hard-IP Cell for ASIC Tapeout
+        sram_256x32_macro u_asic_sram (
+                .CLK   (clk),
+                .CEN   (~mem_en),
+                .A     (addr),
+                .D     (wdata),
+                .Q     (rdata)
+        );
 `else
-	// Generic Behavioral Memory Model (Used for fast simulation prototyping)
-	reg [DATA_WIDTH-1:0] ram_matrix [0:(1<<ADDR_WIDTH)-1];
+        // Generic Behavioral Memory Model (Used for fast simulation prototyping)
+        reg [DATA_WIDTH-1:0] ram_matrix [0:(1<<ADDR_WIDTH)-1];
 
-	always @(posedge clk) begin
-		if (mem_en) begin
-			ram_matrix[addr] <= wdata;
-			rdata            <= ram_matrix[addr];
-		end
-	end
+        always @(posedge clk)
+        begin
+                if (mem_en)
+                begin
+                        ram_matrix[addr] <= wdata;
+                        rdata            <= ram_matrix[addr];
+                end
+        end
 `endif
 
 `ifdef FEATURE_PARITY_CHECK
-	// Parity check circuit is synthesized ONLY when FEATURE_PARITY_CHECK is defined
-	always @(posedge clk or negedge resetn) begin
-		if (!resetn) begin
-			parity_err <= 1'b0;
-		end else begin
-			if (mem_en)
-				parity_err <= ^rdata; // Even parity calculation
-		end
-	end
+        // Parity check circuit is synthesized ONLY when FEATURE_PARITY_CHECK is defined
+        always @(posedge clk)
+        begin
+                if (!resetn)
+                        parity_err <= 1'b0;
+                else
+                begin
+                        if (mem_en)
+                                parity_err <= ^rdata; // Even parity calculation
+                end
+        end
 `else
-	always @(*) begin
-		parity_err = 1'b0;
-	end
+        always @(*)
+        begin
+                parity_err = 1'b0;
+        end
 `endif
 
 `ifdef TARGET_SIMULATION
-	// Display statements only exist in simulation and are compiled out for Genus
-	always @(posedge clk) begin
-		if (mem_en && (addr >= (1<<ADDR_WIDTH))) begin
-			$display("[WARN %0t] Memory access out of bounds! Address: 0x%h", $time, addr);
-		end
-	end
+        // Display statements only exist in simulation and are compiled out for Genus
+        always @(posedge clk)
+        begin
+                if (mem_en && (addr >= (1<<ADDR_WIDTH)))
+                        $display("[WARN %0t] Memory access out of bounds! Address: 0x%h", $time, addr);
+        end
 `endif
 
 endmodule
@@ -1105,30 +1110,30 @@ wire [31:0] next_address;
 
 always @(posedge clk)
 begin
-	if (!resetn_in)
-	begin
-        	counter <= 8'b0;
-        	address <= 32'b0;
-	end
-	else
-	begin
-		case (state)
-			IDLE:
-				counter <= 8'b0;
+        if (!resetn_in)
+        begin
+                counter <= 8'b0;
+                address <= 32'b0;
+        end
+        else
+        begin
+                case (state)
+                        IDLE:
+                                counter <= 8'b0;
 
-			COMPUTE:
-			begin
-				counter <= counter + 1'b1;
-				address <= next_address;
-			end
+                        COMPUTE:
+                        begin
+                                counter <= counter + 1'b1;
+                                address <= next_address;
+                        end
 
-			default:
-			begin
-				counter <= counter;
-				address <= address;
-			end
-        	endcase
-    	end
+                        default:
+                        begin
+                                counter <= counter;
+                                address <= address;
+                        end
+                endcase
+        end
 end
 
 /*
@@ -1164,43 +1169,43 @@ Code Example:
 ```verilog
 always @(posedge clk)
 begin
-	if (!resetn)
-	begin
-		state       <= IDLE;
-		fsm_pulse   <= 1'b0;
-		fsm_level   <= 1'b0;
-	end
-	else
-	begin
-    		fsm_pulse <= 1'b0; // Pulse Signal
+        if (!resetn)
+        begin
+                state       <= IDLE;
+                fsm_pulse   <= 1'b0;
+                fsm_level   <= 1'b0;
+        end
+        else
+        begin
+                fsm_pulse <= 1'b0; // Pulse Signal
 
-		case (state)
-      			IDLE:
-			begin
-        			if (trigger)
-				begin
-          				state <= ACTIVE;
-          				fsm_pulse <= 1'b1;
-          				fsm_level <= 1'b1;
-        			end
-      			end
+                case (state)
+                        IDLE:
+                        begin
+                                if (trigger)
+                                begin
+                                        state <= ACTIVE;
+                                        fsm_pulse <= 1'b1;
+                                        fsm_level <= 1'b1;
+                                end
+                        end
 
-      			ACTIVE:
-			begin
-        			if (done)
-				begin
-					state <= IDLE;
-					fsm_level <= 1'b0;
-        			end
-      			end
+                        ACTIVE:
+                        begin
+                                if (done)
+                                begin
+                                        state <= IDLE;
+                                        fsm_level <= 1'b0;
+                                end
+                        end
 
-      			default:
-			begin
-        			state <= IDLE;
-        			fsm_level <= 1'b0; // Non pulse signal, assigned to safe value in default case
-      			end
-		endcase
-	end
+                        default:
+                        begin
+                                state <= IDLE;
+                                fsm_level <= 1'b0; // Non pulse signal, assigned to safe value in default case
+                        end
+                endcase
+        end
 end
 ```
 
@@ -1229,26 +1234,26 @@ Inverting condition checks or nesting the main logic deep within an else branch 
 ```verilog
 always @(posedge clk)
 begin
-	if (!resetn)
-	begin
-		tx_start <= 1'b0;
-		tx_data  <= 8'h00;
-	end
-	else
-	begin
-		if (!rx_valid)
-            		tx_start <= 1'b0;
-		else
-		begin
-            		if (!fifo_full)
-			begin
-                		tx_start <= 1'b1;
-                		tx_data  <= rx_data;
-            		end
-			else
-                		tx_start <= 1'b0;
-        	end
-    	end
+        if (!resetn)
+        begin
+                tx_start <= 1'b0;
+                tx_data  <= 8'h00;
+        end
+        else
+        begin
+                if (!rx_valid)
+                        tx_start <= 1'b0;
+                else
+                begin
+                        if (!fifo_full)
+                        begin
+                                tx_start <= 1'b1;
+                                tx_data  <= rx_data;
+                        end
+                        else
+                                tx_start <= 1'b0;
+                end
+        end
 end
 ```
 
@@ -1257,19 +1262,20 @@ end
 ```verilog
 always @(posedge clk)
 begin
-	if (!resetn)
-	begin
-		tx_start <= 1'b0;
-		tx_data  <= 8'h00;
-	end
-	else
-        	tx_start <= 1'b0;
-        	if (rx_valid && !fifo_full)
-		begin
-            		tx_start <= 1'b1;
-            		tx_data  <= rx_data;
-        	end
-    	end
+        if (!resetn)
+        begin
+                tx_start <= 1'b0;
+                tx_data  <= 8'h00;
+        end
+        else
+        begin
+                tx_start <= 1'b0;
+                if (rx_valid && !fifo_full)
+                begin
+                        tx_start <= 1'b1;
+                        tx_data  <= rx_data;
+                end
+        end
 end
 ```
 
@@ -1293,32 +1299,32 @@ Here, by interntionally asserting that `tx_start` value must ONLY change when `r
 
 module fsm_data_processor
 #(
-	parameter ADDR_WIDTH   = 32,
-	parameter OFFSET_WIDTH = 16
+        parameter ADDR_WIDTH   = 32,
+        parameter OFFSET_WIDTH = 16
 )(
-	input clk,
-	input resetn,
-	input start_req,
-	input data_valid,
-	input error_flag,
-	input [ADDR_WIDTH-1:0] base_addr,
-	input [OFFSET_WIDTH-1:0] offset,
+        input clk,
+        input resetn,
+        input start_req,
+        input data_valid,
+        input error_flag,
+        input [ADDR_WIDTH-1:0] base_addr,
+        input [OFFSET_WIDTH-1:0] offset,
 
-	output reg busy,
-	output reg done_pulse,
-	output reg error_pulse,
-	output reg [ADDR_WIDTH-1:0] out_addr,
-	output reg [7:0] process_count
+        output reg busy,
+        output reg done_pulse,
+        output reg error_pulse,
+        output reg [ADDR_WIDTH-1:0] out_addr,
+        output reg [7:0] process_count
 );
 
 //-------------------------------------//
 // Parameter definition for FSM States //
 //-------------------------------------//
 parameter [2:0] IDLE    = 3'b000,
-		INIT    = 3'b001,
-		PROCESS = 3'b010,
-		DONE    = 3'b011,
-		FAULT   = 3'b100;
+                INIT    = 3'b001,
+                PROCESS = 3'b010,
+                DONE    = 3'b011,
+                FAULT   = 3'b100;
 
 //---------------//
 // State signals //
@@ -1333,10 +1339,10 @@ wire [ADDR_WIDTH-1:0] next_calculated_addr;
 //----------------------------//
 always @(posedge clk)
 begin
-	if (!resetn)
-		state <= IDLE;
-	else
-		state <= next_state;
+        if (!resetn)
+                state <= IDLE;
+        else
+                state <= next_state;
 end
 
 //------------------//
@@ -1344,58 +1350,58 @@ end
 //------------------//
 always @(posedge clk)
 begin
-	if (!resetn)
-	begin
-		busy          <= 1'b0;
-		done_pulse    <= 1'b0;
-		error_pulse   <= 1'b0;
-		out_addr      <= {ADDR_WIDTH{1'b0}};
-		process_count <= 8'd0;
-	end
-	else
-	begin
-		done_pulse  <= 1'b0;
-		error_pulse <= 1'b0;
+        if (!resetn)
+        begin
+                busy          <= 1'b0;
+                done_pulse    <= 1'b0;
+                error_pulse   <= 1'b0;
+                out_addr      <= {ADDR_WIDTH{1'b0}};
+                process_count <= 8'd0;
+        end
+        else
+        begin
+                done_pulse  <= 1'b0;
+                error_pulse <= 1'b0;
 
-		case (next_state)
-			IDLE:
-			begin
-				busy          <= 1'b0;
-				process_count <= 8'd0;
-			end
+                case (next_state)
+                        IDLE:
+                        begin
+                                busy          <= 1'b0;
+                                process_count <= 8'd0;
+                        end
 
-			INIT:
-			begin
-				busy <= 1'b1;
-				out_addr <= next_calculated_addr;
-			end
+                        INIT:
+                        begin
+                                busy <= 1'b1;
+                                out_addr <= next_calculated_addr;
+                        end
 
-			PROCESS:
-			begin
-				busy <= 1'b1;
-				process_count <= process_count + 1'b1;
-			end
+                        PROCESS:
+                        begin
+                                busy <= 1'b1;
+                                process_count <= process_count + 1'b1;
+                        end
 
-			DONE:
-			begin
-				busy       <= 1'b0;
-				done_pulse <= 1'b1;
-			end
+                        DONE:
+                        begin
+                                busy       <= 1'b0;
+                                done_pulse <= 1'b1;
+                        end
 
-			FAULT:
-			begin
-				busy        <= 1'b0;
-				error_pulse <= 1'b1;
-			end
+                        FAULT:
+                        begin
+                                busy        <= 1'b0;
+                                error_pulse <= 1'b1;
+                        end
 
-			default:
-			begin
-				busy          <= 1'b0;
-				process_count <= 8'd0;
-				out_addr      <= {ADDR_WIDTH{1'b0}};
-			end
-		endcase
-	end
+                        default:
+                        begin
+                                busy          <= 1'b0;
+                                process_count <= 8'd0;
+                                out_addr      <= {ADDR_WIDTH{1'b0}};
+                        end
+                endcase
+        end
 end
 
 //--------------------------------//
@@ -1403,55 +1409,51 @@ end
 //--------------------------------//
 always @(*)
 begin
-	next_state = state; // Default assignment to prevent latches
+        next_state = state; // Default assignment to prevent latches
 
-	case (state)
-		IDLE:
-		begin
-			if (start_req)
-				next_state = INIT;
-			else
-				next_state = IDLE;
-		end
+        case (state)
+                IDLE:
+                begin
+                        if (start_req)
+                                next_state = INIT;
+                        else
+                                next_state = IDLE;
+                end
 
-		INIT:
-		begin
-			if (error_flag)
-				next_state = FAULT;
-			else if (data_valid)
-				next_state = PROCESS;
-			else
-				next_state = INIT;
-		end
+                INIT:
+                begin
+                        if (error_flag)
+                                next_state = FAULT;
+                        else if (data_valid)
+                                next_state = PROCESS;
+                        else
+                                next_state = INIT;
+                end
 
-		PROCESS:
-		begin
-			if (error_flag)
-				next_state = FAULT;
-			else if (process_count == 8'd10)
-				next_state = DONE;
-			else
-				next_state = PROCESS;
-		end
+                PROCESS:
+                begin
+                        if (error_flag)
+                                next_state = FAULT;
+                        else if (process_count == 8'd10)
+                                next_state = DONE;
+                        else
+                                next_state = PROCESS;
+                end
 
-		DONE:
-		begin
-			next_state = IDLE;
-		end
+                DONE:
+                        next_state = IDLE;
 
-		FAULT:
-		begin
-			if (start_req)
-				next_state = IDLE;
-			else
-				next_state = FAULT;
-		end
+                FAULT:
+                begin
+                        if (start_req)
+                                next_state = IDLE;
+                        else
+                                next_state = FAULT;
+                end
 
-		default:
-		begin
-			next_state = IDLE;
-		end
-	endcase
+                default:
+                        next_state = IDLE;
+        endcase
 end
 
 /*
@@ -1517,43 +1519,43 @@ When instantiating the Unit Under Test (UUT) in the testbench, follow the same p
 
 ```verilog
 SRAM_controller #(
-	.N (N),
-	.W (W)
+        .N (N),
+        .W (W)
 ) dut (
-	.clk (clk),
-	.resetn_in (resetn_in),
-	.load_en (load_en),
-	.i_rx (i_rx),
-	.mode_sel (mode_sel),
-	.load_busy_core (load_busy_core),
-	.load_done_core (load_done_core),
-	.CORE_WDATA (CORE_WDATA),
-	.CORE_ADDR (CORE_ADDR),
-	.sync_core_resetn (sync_core_resetn),
-	.boot_en (boot_en),
-	.SRAM_ADDR_RAW (SRAM_ADDR_RAW),
-	.fw_load_en (fw_load_en),
-	.SRAM_WDATA (SRAM_WDATA),
-	.load_busy (load_busy),
-	.load_done (load_done),
-	.o_rts (o_rts),
-	.UART_check_start (UART_check_start),
-	.UART_rx_error (UART_rx_error),
-	.header_fail (header_fail),
-	.sram_valid_uart (sram_valid_uart),
-	.sram_wea_uart (sram_wea_uart)
-	);
+        .clk (clk),
+        .resetn_in (resetn_in),
+        .load_en (load_en),
+        .i_rx (i_rx),
+        .mode_sel (mode_sel),
+        .load_busy_core (load_busy_core),
+        .load_done_core (load_done_core),
+        .CORE_WDATA (CORE_WDATA),
+        .CORE_ADDR (CORE_ADDR),
+        .sync_core_resetn (sync_core_resetn),
+        .boot_en (boot_en),
+        .SRAM_ADDR_RAW (SRAM_ADDR_RAW),
+        .fw_load_en (fw_load_en),
+        .SRAM_WDATA (SRAM_WDATA),
+        .load_busy (load_busy),
+        .load_done (load_done),
+        .o_rts (o_rts),
+        .UART_check_start (UART_check_start),
+        .UART_rx_error (UART_rx_error),
+        .header_fail (header_fail),
+        .sram_valid_uart (sram_valid_uart),
+        .sram_wea_uart (sram_wea_uart)
+);
 
 addr_decoder #(
-	.N (N)
+        .N (N)
 ) u_addr_decoder (
-	.fw_load_en (fw_load_en),
-	.core_decoder_en (core_decoder_en),
-	.core_decoder_en_remap(core_decoder_en_remap),
-	.mode_sel (mode_sel),
-	.SRAM_ADDR_RAW (SRAM_ADDR_RAW),
-	.SRAM_ADDR (decoded_SRAM_ADDR)
-	);
+        .fw_load_en (fw_load_en),
+        .core_decoder_en (core_decoder_en),
+        .core_decoder_en_remap(core_decoder_en_remap),
+        .mode_sel (mode_sel),
+        .SRAM_ADDR_RAW (SRAM_ADDR_RAW),
+        .SRAM_ADDR (decoded_SRAM_ADDR)
+);
 ```
 
 Use the same template as mentioned in the comment header above or copy the one given below:
